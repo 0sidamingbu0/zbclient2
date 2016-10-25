@@ -1,0 +1,28 @@
+device annoce
+[2016-9-19 11:38:16] USART RECIEVE len=12 data=0e 0b ac 36 20 71 b2 0c 00 4b 12 00
+[2016-9-19 11:38:16] POST SEND url=127.0.0.1:10080/device/API/report body={"address":"44086","macAddr":"00:12:4b:00:0c:b2:71:20"}
+
+register
+[2016-9-19 11:38:25] USART RECIEVE len=18 data=02 11 ac 36 00 04 02 01 02 00 12 4b 00 0c b2 71 20 62
+[2016-9-19 11:38:25] POST SEND url=127.0.0.1:10080/device/API/deviceReg body={"address":"44086","deviceType":"N_SwitchLightPanel","resourceSum":"2","linkQuality":"98","macAddr":"00:12:4b:00:0c:b2:71:20"}
+
+register ack
+[2016-9-19 11:38:57] POST RECIEVE len=19 url=/zbClient/API/feedback/register version=HTTP/1.1 body={"address":"44086"}
+[2016-9-19 11:38:57] USART SEND len=8 data=55 aa 03 04 ac 36 01 ea 
+
+report state
+[2016-9-19 11:39:2] USART RECIEVE len=19 data=06 12 ac 36 00 04 06 02 01 00 00 12 4b 00 0c b2 71 20 53 
+[2016-9-19 11:39:2] POST SEND url=127.0.0.1:10080/device/API/feedback/status body={"address":"44086","linkQuality":"83","macAddr":"00:12:4b:00:0c:b2:71:20","status":[{"value":"1"},{"value":"0"}]}
+
+press down
+[2016-9-19 11:39:8] USART RECIEVE len=19 data=01 12 ac 36 00 04 01 02 01 00 00 12 4b 00 0c b2 71 20 55 
+[2016-9-19 11:39:8] POST SEND url=127.0.0.1:10080/device/API/command body={"address":"44086","indaddressex":"1","event":"PressDown","eventData":"","linkQuality":"85","macAddr":"00:12:4b:00:0c:b2:71:20"}
+
+press up
+[2016-9-19 11:39:8] USART RECIEVE len=19 data=01 12 ac 36 00 04 01 02 01 01 00 12 4b 00 0c b2 71 20 5b 
+[2016-9-19 11:39:8] POST SEND url=127.0.0.1:10080/device/API/command body={"address":"44086","indaddressex":"1","event":"PressUp","eventData":"","linkQuality":"91","macAddr":"00:12:4b:00:0c:b2:71:20"}
+
+reverse 
+[2016-9-19 11:39:8] POST RECIEVE len=67 url=/zbClient/API/send version=HTTP/1.1 body={"address":"44086","index":1,"command":"Reverse","resourceSum":"2"}
+[2016-9-19 11:39:8] USART SEND len=9 data=55 aa 00 05 ac 36 03 02 ec 
+
