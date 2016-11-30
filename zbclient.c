@@ -48,7 +48,7 @@ sudo find / -name libmicrohttpd*
 
 #include <sys/syscall.h>  
 
-char * softversion = "ZB2016102400";
+char * softversion = "ZB2016113000";
 char   returnstr[200]={0};
 char hostname[50]={0};
 char startTime[50]={0};
@@ -1128,56 +1128,78 @@ void recieve_usart(uint8_t *rx,uint8_t len)
 
 	if(cid == 6)
 	{
-		if(len != 13 + 1 + 8)break;
+		//if(len != 13 + 1 + 8)break;
 		//printf("control up - find id = %d\n",i);
 		//printf("id:%4x\n",id);
-		if(rx[11] == 0x20)
+		if(len == 13 + 1 + 8)
 		{
-			//printf("double kick\n");
-			char str[200]={0};
-			char str_url[200]={0};
-			sprintf(str,"{\"address\":\"%d\",\"indaddressex\":\"%d\",\"event\":\"%s\",\"linkQuality\":\"%d\",\"macAddr\":\"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\"}",id,1,"DoubleClick",rx[len-1],rx[len-9],rx[len-8],rx[len-7],rx[len-6],rx[len-5],rx[len-4],rx[len-3],rx[len-2]);
-			sprintf(str_url,"127.0.0.1:%d/device/API/command",PORT_CLIENT);
-			curl_easy_setopt(posturl, CURLOPT_URL, str_url);
-			curl_easy_setopt(posturl, CURLOPT_POSTFIELDS,str);
-			curl_easy_perform(posturl);	
-			printf("[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);
-			if ((sp = fopen("/var/log/zbclient.log","a+")) != NULL)
+			if(rx[11] == 0x20)
 			{
-				fprintf(sp,"[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);			
-				  fclose(sp);
-			}			
-		}
-		else
-		{
-			//printf("action = %d\n",rx[12]);			
-			char* event;
-			switch(rx[12])
-			{
-				case 0: event = "PressDown";break;
-				case 1: event = "PressUp";break;
-				case 2: event = "DoubleClick";break;
-				case 3: event = "Click";break;
-				case 4: event = "BodyMove";break;
-				case 5: event = "ReportData";break;
-				case 6: event = "LongPress";break;
-				case 7: event = "TriggerByCloud";break; 
-				default : event = "Unknow event";
+				//printf("double kick\n");
+				char str[200]={0};
+				char str_url[200]={0};
+				sprintf(str,"{\"address\":\"%d\",\"indaddressex\":\"%d\",\"event\":\"%s\",\"linkQuality\":\"%d\",\"macAddr\":\"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\"}",id,1,"DoubleClick",rx[len-1],rx[len-9],rx[len-8],rx[len-7],rx[len-6],rx[len-5],rx[len-4],rx[len-3],rx[len-2]);
+				sprintf(str_url,"127.0.0.1:%d/device/API/command",PORT_CLIENT);
+				curl_easy_setopt(posturl, CURLOPT_URL, str_url);
+				curl_easy_setopt(posturl, CURLOPT_POSTFIELDS,str);
+				curl_easy_perform(posturl);	
+				printf("[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);
+				if ((sp = fopen("/var/log/zbclient.log","a+")) != NULL)
+				{
+					fprintf(sp,"[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);			
+					  fclose(sp);
+				}			
 			}
-			char str[200]={0};
-			char str_url[200]={0};
-			sprintf(str,"{\"address\":\"%d\",\"indaddressex\":\"%d\",\"event\":\"%s\",\"linkQuality\":\"%d\",\"macAddr\":\"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\"}",id,1,event,rx[len-1],rx[len-9],rx[len-8],rx[len-7],rx[len-6],rx[len-5],rx[len-4],rx[len-3],rx[len-2]);
-			sprintf(str_url,"127.0.0.1:%d/device/API/command",PORT_CLIENT);
-			curl_easy_setopt(posturl, CURLOPT_URL, str_url);
-			curl_easy_setopt(posturl, CURLOPT_POSTFIELDS,str);
-			curl_easy_perform(posturl); 
-			printf("[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);
-			if ((sp = fopen("/var/log/zbclient.log","a+")) != NULL)
+			else
 			{
-				fprintf(sp,"[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);			
-				  fclose(sp);
-			}
+				//printf("action = %d\n",rx[12]);			
+				char* event;
+				switch(rx[12])
+				{
+					case 0: event = "PressDown";break;
+					case 1: event = "PressUp";break;
+					case 2: event = "DoubleClick";break;
+					case 3: event = "Click";break;
+					case 4: event = "BodyMove";break;
+					case 5: event = "ReportData";break;
+					case 6: event = "LongPress";break;
+					case 7: event = "TriggerByCloud";break; 
+					default : event = "Unknow event";
+				}
+				char str[200]={0};
+				char str_url[200]={0};
+				sprintf(str,"{\"address\":\"%d\",\"indaddressex\":\"%d\",\"event\":\"%s\",\"linkQuality\":\"%d\",\"macAddr\":\"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\"}",id,1,event,rx[len-1],rx[len-9],rx[len-8],rx[len-7],rx[len-6],rx[len-5],rx[len-4],rx[len-3],rx[len-2]);
+				sprintf(str_url,"127.0.0.1:%d/device/API/command",PORT_CLIENT);
+				curl_easy_setopt(posturl, CURLOPT_URL, str_url);
+				curl_easy_setopt(posturl, CURLOPT_POSTFIELDS,str);
+				curl_easy_perform(posturl); 
+				printf("[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);
+				if ((sp = fopen("/var/log/zbclient.log","a+")) != NULL)
+				{
+					fprintf(sp,"[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);			
+					  fclose(sp);
+				}
 
+			}
+		}
+		else if(len == 17 + 1 + 8)//12=1,16=0
+		{
+			if(rx[12] == 1 && rx[16] == 0)
+			{
+				char str[200]={0};
+				char str_url[200]={0};
+				sprintf(str,"{\"address\":\"%d\",\"indaddressex\":\"%d\",\"event\":\"%s\",\"linkQuality\":\"%d\",\"macAddr\":\"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\"}",id,1,"Click",rx[len-1],rx[len-9],rx[len-8],rx[len-7],rx[len-6],rx[len-5],rx[len-4],rx[len-3],rx[len-2]);
+				sprintf(str_url,"127.0.0.1:%d/device/API/command",PORT_CLIENT);
+				curl_easy_setopt(posturl, CURLOPT_URL, str_url);
+				curl_easy_setopt(posturl, CURLOPT_POSTFIELDS,str);
+				curl_easy_perform(posturl);	
+				printf("[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);
+				if ((sp = fopen("/var/log/zbclient.log","a+")) != NULL)
+				{
+					fprintf(sp,"[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);			
+					  fclose(sp);
+				}			
+			}
 		}
 	}
 	else if(cid == 0x406)
@@ -1252,7 +1274,7 @@ void recieve_usart(uint8_t *rx,uint8_t len)
 	}
   	
 	
-	if(len>=27 && len < 32 + 1 + 8)
+	if(len>=27 && len < 32 + 1 + 8 + 3)
 		{
 			if(cid == 0 && rx[12] <= len - 13)
 			{
@@ -1261,7 +1283,41 @@ void recieve_usart(uint8_t *rx,uint8_t len)
 				temp_str = (uint8_t*)calloc(rx[12],sizeof(uint8_t));
 				strncpy(temp_str, &rx[13],rx[12]);
 				//printf("temp_str = %s\n",temp_str);
-				if (0 == strcmp (temp_str, "lumi.sensor_switch"))
+				if (0 == strcmp (temp_str, "lumi.sensor_86sw1"))
+				{
+					//printf("switch join\n");
+					char str[200]={0};
+					char str_url[200]={0};
+					sprintf(str,"{\"address\":\"%d\",\"deviceType\":\"%s\",\"resourceSum\":\"%d\",\"linkQuality\":\"%d\",\"macAddr\":\"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\"}",id,"N_SwitchButton_Mi",1,rx[len-1],rx[len-9],rx[len-8],rx[len-7],rx[len-6],rx[len-5],rx[len-4],rx[len-3],rx[len-2]);
+					sprintf(str_url,"127.0.0.1:%d/device/API/deviceReg",PORT_CLIENT);
+					curl_easy_setopt(posturl, CURLOPT_URL, str_url);
+					curl_easy_setopt(posturl, CURLOPT_POSTFIELDS,str);
+					curl_easy_perform(posturl);	
+					printf("[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);
+					if ((sp = fopen("/var/log/zbclient.log","a+")) != NULL)
+					{
+						fprintf(sp,"[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);			
+						  fclose(sp);
+					}					
+				}
+				else if (0 == strcmp (temp_str, "lumi.sensor_86sw2"))
+				{
+					//printf("switch join\n");
+					char str[200]={0};
+					char str_url[200]={0};
+					sprintf(str,"{\"address\":\"%d\",\"deviceType\":\"%s\",\"resourceSum\":\"%d\",\"linkQuality\":\"%d\",\"macAddr\":\"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\"}",id,"N_SwitchButton_Mi",2,rx[len-1],rx[len-9],rx[len-8],rx[len-7],rx[len-6],rx[len-5],rx[len-4],rx[len-3],rx[len-2]);
+					sprintf(str_url,"127.0.0.1:%d/device/API/deviceReg",PORT_CLIENT);
+					curl_easy_setopt(posturl, CURLOPT_URL, str_url);
+					curl_easy_setopt(posturl, CURLOPT_POSTFIELDS,str);
+					curl_easy_perform(posturl);	
+					printf("[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);
+					if ((sp = fopen("/var/log/zbclient.log","a+")) != NULL)
+					{
+						fprintf(sp,"[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);			
+						  fclose(sp);
+					}					
+				}
+				else if (0 == strcmp (temp_str, "lumi.sensor_switch"))
 				{
 					//printf("switch join\n");
 					char str[200]={0};
