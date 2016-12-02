@@ -48,7 +48,7 @@ sudo find / -name libmicrohttpd*
 
 #include <sys/syscall.h>  
 
-char * softversion = "ZB2016113000";
+char * softversion = "ZB2016120200";
 char   returnstr[200]={0};
 char hostname[50]={0};
 char startTime[50]={0};
@@ -232,7 +232,7 @@ void MXJ_SendRegisterMessage( uint16_t , uint8_t );
 void MXJ_SendPingMessage( uint16_t id );
 void MXJ_GetIdxMessage( uint16_t id );
 
-void MXJ_SendCtrlMessage( uint16_t ,uint8_t len, uint8_t , uint8_t , uint8_t );
+void MXJ_SendCtrlMessage( uint16_t ,uint8_t ,uint8_t len, uint8_t , uint8_t , uint8_t );
 void MXJ_SendStateMessage( uint16_t );
 
 void MXJ_GetStateMessage( uint16_t id );
@@ -565,19 +565,19 @@ DEBUG();
 								if(index == 1)
 								{
 									mutex_flag = 0;
-									MXJ_SendCtrlMessage(address ,resourceSum,commandint , 2 , 2 );
+									MXJ_SendCtrlMessage(address ,1, resourceSum,commandint , 2 , 2 );
 									mutex_flag = 1;
 								}
 								else if(index == 2)
 								{
 									mutex_flag = 0;
-									MXJ_SendCtrlMessage(address ,resourceSum, 2 ,commandint, 2 );
+									MXJ_SendCtrlMessage(address ,1, resourceSum, 2 ,commandint, 2 );
 									mutex_flag = 1;
 								}
 								else if(index == 3)
 								{
 									mutex_flag = 0;
-									MXJ_SendCtrlMessage(address ,resourceSum, 2, 2 , commandint );
+									MXJ_SendCtrlMessage(address ,1, resourceSum, 2, 2 , commandint );
 									mutex_flag = 1;
 								}
 							}
@@ -830,6 +830,7 @@ void recieve_usart(uint8_t *rx,uint8_t len)
 	mutex_flag = 1;
 	int i=0,j=0;
 	int id=0,cid=0;
+	uint8_t endpoint = 1;
 	char eventDataStr[50];
 	uint32_t eventData32 = 0;
 	digitalWrite(G1_LED,HIGH);
@@ -897,6 +898,9 @@ void recieve_usart(uint8_t *rx,uint8_t len)
 		cid |= rx[5];
 	}
   
+  endpoint = rx[len - 10];
+
+
   switch(rx[0])
   {
     case MXJ_CTRL_UP:
@@ -1131,7 +1135,7 @@ void recieve_usart(uint8_t *rx,uint8_t len)
 		//if(len != 13 + 1 + 8)break;
 		//printf("control up - find id = %d\n",i);
 		//printf("id:%4x\n",id);
-		if(len == 13 + 1 + 8)
+		if(len == 13 + 1 + 8 + 1)
 		{
 			if(rx[11] == 0x20)
 			{
@@ -1182,29 +1186,61 @@ void recieve_usart(uint8_t *rx,uint8_t len)
 
 			}
 		}
-		else if(len == 17 + 1 + 8)//12=1,16=0
+		else if(len == 17 + 1 + 8 + 1)//12=1,16=0
 		{
 			if(rx[12] == 1 && rx[16] == 0)
 			{
-				char str[200]={0};
-				char str_url[200]={0};
-				sprintf(str,"{\"address\":\"%d\",\"indaddressex\":\"%d\",\"event\":\"%s\",\"linkQuality\":\"%d\",\"macAddr\":\"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\"}",id,1,"Click",rx[len-1],rx[len-9],rx[len-8],rx[len-7],rx[len-6],rx[len-5],rx[len-4],rx[len-3],rx[len-2]);
-				sprintf(str_url,"127.0.0.1:%d/device/API/command",PORT_CLIENT);
-				curl_easy_setopt(posturl, CURLOPT_URL, str_url);
-				curl_easy_setopt(posturl, CURLOPT_POSTFIELDS,str);
-				curl_easy_perform(posturl);	
-				printf("[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);
-				if ((sp = fopen("/var/log/zbclient.log","a+")) != NULL)
+				if(endpoint == 3)
 				{
-					fprintf(sp,"[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);			
-					  fclose(sp);
-				}			
+					char str[200]={0};
+					char str_url[200]={0};
+					sprintf(str,"{\"address\":\"%d\",\"indaddressex\":\"%d\",\"event\":\"%s\",\"linkQuality\":\"%d\",\"macAddr\":\"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\"}",id,1,"Click",rx[len-1],rx[len-9],rx[len-8],rx[len-7],rx[len-6],rx[len-5],rx[len-4],rx[len-3],rx[len-2]);
+					sprintf(str_url,"127.0.0.1:%d/device/API/command",PORT_CLIENT);
+					curl_easy_setopt(posturl, CURLOPT_URL, str_url);
+					curl_easy_setopt(posturl, CURLOPT_POSTFIELDS,str);
+					curl_easy_perform(posturl);	
+					printf("[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);
+					if ((sp = fopen("/var/log/zbclient.log","a+")) != NULL)
+					{
+						fprintf(sp,"[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);			
+						  fclose(sp);
+					}	
+
+					sprintf(str,"{\"address\":\"%d\",\"indaddressex\":\"%d\",\"event\":\"%s\",\"linkQuality\":\"%d\",\"macAddr\":\"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\"}",id,2,"Click",rx[len-1],rx[len-9],rx[len-8],rx[len-7],rx[len-6],rx[len-5],rx[len-4],rx[len-3],rx[len-2]);
+					sprintf(str_url,"127.0.0.1:%d/device/API/command",PORT_CLIENT);
+					curl_easy_setopt(posturl, CURLOPT_URL, str_url);
+					curl_easy_setopt(posturl, CURLOPT_POSTFIELDS,str);
+					curl_easy_perform(posturl);	
+					printf("[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);
+					if ((sp = fopen("/var/log/zbclient.log","a+")) != NULL)
+					{
+						fprintf(sp,"[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);			
+						  fclose(sp);
+					}
+
+				}
+				else
+				{
+					char str[200]={0};
+					char str_url[200]={0};
+					sprintf(str,"{\"address\":\"%d\",\"indaddressex\":\"%d\",\"event\":\"%s\",\"linkQuality\":\"%d\",\"macAddr\":\"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\"}",id,endpoint,"Click",rx[len-1],rx[len-9],rx[len-8],rx[len-7],rx[len-6],rx[len-5],rx[len-4],rx[len-3],rx[len-2]);
+					sprintf(str_url,"127.0.0.1:%d/device/API/command",PORT_CLIENT);
+					curl_easy_setopt(posturl, CURLOPT_URL, str_url);
+					curl_easy_setopt(posturl, CURLOPT_POSTFIELDS,str);
+					curl_easy_perform(posturl);	
+					printf("[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);
+					if ((sp = fopen("/var/log/zbclient.log","a+")) != NULL)
+					{
+						fprintf(sp,"[%d-%d-%d %d:%d:%d] POST SEND url=%s body=%s\n", tblock->tm_year+1900, tblock->tm_mon+1, tblock->tm_mday, tblock->tm_hour, tblock->tm_min, tblock->tm_sec,str_url,str);			
+						  fclose(sp);
+					}	
+				}		
 			}
 		}
 	}
 	else if(cid == 0x406)
 	{
-		if(len != 13 + 1 + 8)break;
+		if(len != 13 + 1 + 8 + 1)break;
 		//printf("control up - find id = %d\n",i);
 		//printf("id:%4x\n",id);
 		//printf("human detected\n");
@@ -1225,7 +1261,7 @@ void recieve_usart(uint8_t *rx,uint8_t len)
 	else if(cid == 0x402)
 	{
 		int16_t temp = 0;
-		if(len != 14 + 1 + 8)break;
+		if(len != 14 + 1 + 8 + 1)break;
 		static uint8_t temp_flag = 0;
 		temp = rx[13];
 		temp <<= 8;
@@ -1251,7 +1287,7 @@ void recieve_usart(uint8_t *rx,uint8_t len)
 	else if(cid == 0x405)
 	{
 	 	uint16_t temp = 0;
-		if(len != 14 + 1 + 8)break;
+		if(len != 14 + 1 + 8 + 1)break;
 		temp = rx[13];
 		temp <<= 8;
 		temp |= rx[12];
@@ -1274,7 +1310,7 @@ void recieve_usart(uint8_t *rx,uint8_t len)
 	}
   	
 	
-	if(len>=27 && len < 32 + 1 + 8 + 3)
+	if(len>=27 && len < 32 + 1 + 8 + 3 + 1)
 		{
 			if(cid == 0 && rx[12] <= len - 13)
 			{
@@ -1388,7 +1424,7 @@ void recieve_usart(uint8_t *rx,uint8_t len)
 			}
 		}
 
-		if(cid == 0 && len == 40 + 1 + 8)
+		if(cid == 0 && len == 40 + 1 + 8 + 1)
 		{
 			char str[200]={0};
 			char strtemp[200]={0};
@@ -1415,7 +1451,7 @@ void recieve_usart(uint8_t *rx,uint8_t len)
     break;
 
 	case MXJ_XIAOMI1C:
-		if(cid == 0 && len == 35 + 1 + 8)
+		if(cid == 0 && len == 35 + 1 + 8 + 1)
 		{
 			char str[200]={0};
 			char strtemp[200]={0};
@@ -1806,11 +1842,11 @@ void thread_alarm(void)
  *
  * @return  none
  */
-void MXJ_SendCtrlMessage( uint16_t id ,uint8_t len,uint8_t msg1 , uint8_t msg2 , uint8_t msg3 )
+void MXJ_SendCtrlMessage( uint16_t id ,uint8_t endpoint ,uint8_t len,uint8_t msg1 , uint8_t msg2 , uint8_t msg3 )
 {
 //  uint8_t data[5]={MXJ_CTRL_DOWN,3,msg1,msg2,msg3};//¨¨?a????1¡ë??¡ã??
-  uint8_t data[7]={0,len+3,(uint8_t)(id>>8),(uint8_t)id,msg1,msg2,msg3};
-  send_usart(data,4+len);
+  uint8_t data[8]={0,len+4,(uint8_t)(id>>8),(uint8_t)id,endpoint,msg1,msg2,msg3};
+  send_usart(data,5+len);
 }
 
 /*********************************************************************
@@ -1829,31 +1865,31 @@ void MXJ_SendCtrlMessage( uint16_t id ,uint8_t len,uint8_t msg1 , uint8_t msg2 ,
  */
 void MXJ_SendRegisterMessage( uint16_t id, uint8_t state )
 {
-  uint8_t data[5]={0,4,(uint8_t)(id>>8),(uint8_t)id,1};
+  uint8_t data[6]={0,4,(uint8_t)(id>>8),(uint8_t)id,1,1};//0 idh idl endpoint data
   if(state == MXJ_REGISTER_OK)
   {
     data[0]=3;
-    data[4]=1;
-    send_usart(data,5);
+    data[5]=1;
+    send_usart(data,6);
   }
   else if(state == MXJ_REGISTER_FAILED)
   {
     data[0]=4;
-    data[4]=0;
-    send_usart(data,5);
+    data[5]=0;
+    send_usart(data,6);
   }
 }
 
 void MXJ_SendPingMessage( uint16_t id )
 {
-  uint8_t data[4]={0x0f,3,(uint8_t)(id>>8),(uint8_t)id};//¨¨?a????1¡ë??¡ã??
-  send_usart(data,4);
+  uint8_t data[5]={0x0f,3,(uint8_t)(id>>8),(uint8_t)id,1};//¨¨?a????1¡ë??¡ã??
+  send_usart(data,5);
 }
 
 void MXJ_GetIdxMessage( uint16_t id )
 {
-  uint8_t data[4]={0x0b,3,(uint8_t)(id>>8),(uint8_t)id};//¨¨?a????1¡ë??¡ã??
-  send_usart(data,4);
+  uint8_t data[5]={0x0b,3,(uint8_t)(id>>8),(uint8_t)id,1};//¨¨?a????1¡ë??¡ã??
+  send_usart(data,5);
 }
 
 /*********************************************************************
@@ -1867,8 +1903,8 @@ void MXJ_GetIdxMessage( uint16_t id )
  */
 void MXJ_GetStateMessage( uint16_t id )
 {
-  uint8_t data[4]={5,3,(uint8_t)(id>>8),(uint8_t)id};//¡Á??¡§¨°?¨ºy?Y
-  send_usart(data,4);
+  uint8_t data[5]={5,3,(uint8_t)(id>>8),(uint8_t)id,1};//¡Á??¡§¨°?¨ºy?Y
+  send_usart(data,5);
 }
 
 void printf_file(char * str)
