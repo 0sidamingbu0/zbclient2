@@ -1451,7 +1451,7 @@ void recieve_usart(uint8_t *rx,uint8_t len)
     break;
 
 	case MXJ_XIAOMI1C:
-		if(cid == 0 && len == 35 + 1 + 8 + 1)
+		if(cid == 0 && ((len == 35 + 1 + 8 + 1)||(len == 51)))
 		{
 			char str[200]={0};
 			char strtemp[200]={0};
